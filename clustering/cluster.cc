@@ -222,6 +222,7 @@ void barcode_similarity(){
     valid_base['g'] = true;
     valid_base['t'] = true;
 
+    cout << "Info: << here\n";
     size_t mask_count = 1;
     vector<bool> mask(barcode_length_1+barcode_length_2, false);
     std::fill(mask.begin() + error_tolerance, mask.end(), true);
@@ -354,9 +355,9 @@ void output_clusters(){
         fastq2.open (input_2);
     } else {
         fastq1_gz = gzopen(input_1.c_str(), "r");
-        fastq2_gz = gzopen(input_2.c_str(), "r");
+        // fastq2_gz = gzopen(input_2.c_str(), "r");
         fastq1_gz_reader = kseq_init(fastq1_gz);
-        fastq2_gz_reader = kseq_init(fastq2_gz);
+        // fastq2_gz_reader = kseq_init(fastq2_gz);
     }
     string name_1, quality_1, sequence_1, name_2, quality_2, sequence_2, trash;
     if (!sort_clusters) {
@@ -384,123 +385,123 @@ void output_clusters(){
                 if (valid_gz_line < 0) {
                     break;
                 }
-                valid_gz_line = kseq_read(fastq2_gz_reader);
-                if (valid_gz_line < 0) {
-                    break;
-                }
+                // valid_gz_line = kseq_read(fastq2_gz_reader);
+                // if (valid_gz_line < 0) {
+                //     break;
+                // }
                 name_1     = "@";
                 name_1     += fastq1_gz_reader->name.s;
                 sequence_1 = fastq1_gz_reader->seq.s;
                 quality_1  = fastq1_gz_reader->qual.s;
-                name_2     = "@";
-                name_2     += fastq2_gz_reader->name.s;
-                sequence_2 = fastq2_gz_reader->seq.s;
-                quality_2  = fastq2_gz_reader->qual.s;
+                // name_2     = "@";
+                // name_2     += fastq2_gz_reader->name.s;
+                // sequence_2 = fastq2_gz_reader->seq.s;
+                // quality_2  = fastq2_gz_reader->qual.s;
             }
 
-            if (name_1.size() != name_2.size() || sequence_1.size() != quality_1.size() || sequence_2.size() != quality_2.size()) {
-                cerr << "ERROR: Something is fishy with read:\n";
-                cerr << "name_1\t" << name_1 << "\n";
-                cerr << "sequence_1\t" << sequence_1 << "\n";
-                cerr << "trash\t" << trash << "\n";
-                cerr << "quality_1\t" << quality_1 << "\n";
-                cerr << "name_2\t" << name_2 << "\n";
-                cerr << "sequence_2\t" << sequence_2 << "\n";
-                cerr << "trash\t" << trash << "\n";
-                cerr << "quality_2\t" << quality_2 << "\n";
-                exit(-1);
-            }
+            // if (name_1.size() != name_2.size() || sequence_1.size() != quality_1.size() || sequence_2.size() != quality_2.size()) {
+            //     cerr << "ERROR: Something is fishy with read:\n";
+            //     cerr << "name_1\t" << name_1 << "\n";
+            //     cerr << "sequence_1\t" << sequence_1 << "\n";
+            //     cerr << "trash\t" << trash << "\n";
+            //     cerr << "quality_1\t" << quality_1 << "\n";
+            //     cerr << "name_2\t" << name_2 << "\n";
+            //     cerr << "sequence_2\t" << sequence_2 << "\n";
+            //     cerr << "trash\t" << trash << "\n";
+            //     cerr << "quality_2\t" << quality_2 << "\n";
+            //     exit(-1);
+            // }
 
             node_id_t current_read_node = read_to_node_vector[current_read];
             clusters << node_to_cluster_vector[current_read_node] << "\t" << current_read_node << "\t" << current_read << "\t";
-            clusters << name_1 << "\t" << sequence_1 << "\t" << quality_1 << "\t";
-            clusters << name_2 << "\t" << sequence_2 << "\t" << quality_2 << "\n";
+            clusters << name_1 << "\t" << sequence_1 << "\t" << quality_1 << "\n";
+            // clusters << name_2 << "\t" << sequence_2 << "\t" << quality_2 << "\n";
             current_read++;
         }
         return;
-    } else {
-        read_id_t current_read = 0;
-        ofstream clusters;
-        if (max_memory_use == 0) {
-            max_memory_use = 1024;
-        }
-        size_t min_records_per_tmp_file = max_memory_use/4;
-        cout << "min_records_per_tmp_file " << min_records_per_tmp_file << "\n";
-        size_t temp_out_count;
-        cout << "There are " << cluster_count << " clusters\n";
-        temp_out_count = (unsigned long) ceil(float(read_count)/float(min_records_per_tmp_file));
-        cout << "There are " << temp_out_count << " temp files\n";
-        temp_out_count = min(MAX_TMP_FILE_COUNT, (double) temp_out_count);
-        cout << "There are " << temp_out_count << " temp files\n";
-        vector<ofstream> temp_out_files(temp_out_count);
-        vector<string> temp_out_names(temp_out_count);
-        for (size_t i = 0; i < temp_out_count; i++) {
-            temp_out_names[i] = output_prefix + "temp_" + to_string(i);
-            temp_out_files[i] = ofstream(temp_out_names[i]);
-        }
+    // } else {
+    //     read_id_t current_read = 0;
+    //     ofstream clusters;
+    //     if (max_memory_use == 0) {
+    //         max_memory_use = 1024;
+    //     }
+    //     size_t min_records_per_tmp_file = max_memory_use/4;
+    //     cout << "min_records_per_tmp_file " << min_records_per_tmp_file << "\n";
+    //     size_t temp_out_count;
+    //     cout << "There are " << cluster_count << " clusters\n";
+    //     temp_out_count = (unsigned long) ceil(float(read_count)/float(min_records_per_tmp_file));
+    //     cout << "There are " << temp_out_count << " temp files\n";
+    //     temp_out_count = min(MAX_TMP_FILE_COUNT, (double) temp_out_count);
+    //     cout << "There are " << temp_out_count << " temp files\n";
+    //     vector<ofstream> temp_out_files(temp_out_count);
+    //     vector<string> temp_out_names(temp_out_count);
+    //     for (size_t i = 0; i < temp_out_count; i++) {
+    //         temp_out_names[i] = output_prefix + "temp_" + to_string(i);
+    //         temp_out_files[i] = ofstream(temp_out_names[i]);
+    //     }
 
-        while (true) {
-            if (!gz_input) {
-                bool valid_txt_line = true;
-                valid_txt_line = valid_txt_line && getline(fastq1, name_1);
-                valid_txt_line = valid_txt_line && getline(fastq1, sequence_1);
-                valid_txt_line = valid_txt_line && getline(fastq1, trash);
-                valid_txt_line = valid_txt_line && getline(fastq1, quality_1);
-                valid_txt_line = valid_txt_line && getline(fastq2, name_2);
-                valid_txt_line = valid_txt_line && getline(fastq2, sequence_2);
-                valid_txt_line = valid_txt_line && getline(fastq2, trash);
-                valid_txt_line = valid_txt_line && getline(fastq2, quality_2);
-                if (!valid_txt_line) {
-                    break;
-                }
-            } else {
-                int valid_gz_line;
-                valid_gz_line = kseq_read(fastq1_gz_reader);
-                if (valid_gz_line < 0) {
-                    break;
-                }
-                valid_gz_line = kseq_read(fastq2_gz_reader);
-                if (valid_gz_line < 0) {
-                    break;
-                }
-                name_1     = "@";
-                name_1     += fastq1_gz_reader->name.s;
-                sequence_1 = fastq1_gz_reader->seq.s;
-                quality_1  = fastq1_gz_reader->qual.s;
-                name_2     = "@";
-                name_2     += fastq2_gz_reader->name.s;
-                sequence_2 = fastq2_gz_reader->seq.s;
-                quality_2  = fastq2_gz_reader->qual.s;
-            }
+    //     while (true) {
+    //         if (!gz_input) {
+    //             bool valid_txt_line = true;
+    //             valid_txt_line = valid_txt_line && getline(fastq1, name_1);
+    //             valid_txt_line = valid_txt_line && getline(fastq1, sequence_1);
+    //             valid_txt_line = valid_txt_line && getline(fastq1, trash);
+    //             valid_txt_line = valid_txt_line && getline(fastq1, quality_1);
+    //             valid_txt_line = valid_txt_line && getline(fastq2, name_2);
+    //             valid_txt_line = valid_txt_line && getline(fastq2, sequence_2);
+    //             valid_txt_line = valid_txt_line && getline(fastq2, trash);
+    //             valid_txt_line = valid_txt_line && getline(fastq2, quality_2);
+    //             if (!valid_txt_line) {
+    //                 break;
+    //             }
+    //         } else {
+    //             int valid_gz_line;
+    //             valid_gz_line = kseq_read(fastq1_gz_reader);
+    //             if (valid_gz_line < 0) {
+    //                 break;
+    //             }
+    //             valid_gz_line = kseq_read(fastq2_gz_reader);
+    //             if (valid_gz_line < 0) {
+    //                 break;
+    //             }
+    //             name_1     = "@";
+    //             name_1     += fastq1_gz_reader->name.s;
+    //             sequence_1 = fastq1_gz_reader->seq.s;
+    //             quality_1  = fastq1_gz_reader->qual.s;
+    //             name_2     = "@";
+    //             name_2     += fastq2_gz_reader->name.s;
+    //             sequence_2 = fastq2_gz_reader->seq.s;
+    //             quality_2  = fastq2_gz_reader->qual.s;
+    //         }
 
-            node_id_t current_read_node = read_to_node_vector[current_read];
-            size_t current_temp_out_id = node_to_cluster_vector[current_read_node] % temp_out_count;
-            temp_out_files[current_temp_out_id] << node_to_cluster_vector[current_read_node] << "\t" << current_read_node << "\t" << current_read << "\t";
-            temp_out_files[current_temp_out_id] << name_1 << "\t" << sequence_1 << "\t" << quality_1 << "\t";
-            temp_out_files[current_temp_out_id] << name_2 << "\t" << sequence_2 << "\t" << quality_2 << "\n";
-            current_read++;
-        }
-        read_id_to_node_id_vector().swap(read_to_node_vector);
-        node_id_to_cluster_id_vector().swap(node_to_cluster_vector);
+    //         node_id_t current_read_node = read_to_node_vector[current_read];
+    //         size_t current_temp_out_id = node_to_cluster_vector[current_read_node] % temp_out_count;
+    //         temp_out_files[current_temp_out_id] << node_to_cluster_vector[current_read_node] << "\t" << current_read_node << "\t" << current_read << "\t";
+    //         temp_out_files[current_temp_out_id] << name_1 << "\t" << sequence_1 << "\t" << quality_1 << "\t";
+    //         temp_out_files[current_temp_out_id] << name_2 << "\t" << sequence_2 << "\t" << quality_2 << "\n";
+    //         current_read++;
+    //     }
+    //     read_id_to_node_id_vector().swap(read_to_node_vector);
+    //     node_id_to_cluster_id_vector().swap(node_to_cluster_vector);
 
-        clusters = ofstream(output_prefix + "cluster");
-        for (size_t i = 0; i < temp_out_count; i++) {
-            cout << "Processing file " << temp_out_names[i] << "\n";
-            temp_out_files[i].close();
-            ifstream temp_file;
-            temp_file.open(temp_out_names[i]);
-            vector<string> records(size_t(ceil((double)cluster_count/(double)temp_out_count)), "");
-            string record;
-            while(getline(temp_file, record)) {
-                size_t cluster_id = stoi(record.substr(0, record.find("\t"))) % temp_out_count;
-                records[cluster_id]+= record + "\n";
-            }
-            for (string record : records) {
-                clusters << record;
-            }
-            temp_file.close();
-            remove(temp_out_names[i].c_str());
-        }
+    //     clusters = ofstream(output_prefix + "cluster");
+    //     for (size_t i = 0; i < temp_out_count; i++) {
+    //         cout << "Processing file " << temp_out_names[i] << "\n";
+    //         temp_out_files[i].close();
+    //         ifstream temp_file;
+    //         temp_file.open(temp_out_names[i]);
+    //         vector<string> records(size_t(ceil((double)cluster_count/(double)temp_out_count)), "");
+    //         string record;
+    //         while(getline(temp_file, record)) {
+    //             size_t cluster_id = stoi(record.substr(0, record.find("\t"))) % temp_out_count;
+    //             records[cluster_id]+= record + "\n";
+    //         }
+    //         for (string record : records) {
+    //             clusters << record;
+    //         }
+    //         temp_file.close();
+    //         remove(temp_out_names[i].c_str());
+    //     }
     }
 
 

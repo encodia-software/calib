@@ -69,7 +69,6 @@ void extract_barcodes_and_minimizers() {
     node_to_minimizers_ptr = new node_id_to_minimizers_vector();
 
     node_to_read_id_unordered_map node_to_read_map;
-
     for (int i = 0; i < ASCII_SIZE; i++) {
         encode[i] = (minimizer_t) -1;
     }
@@ -82,6 +81,14 @@ void extract_barcodes_and_minimizers() {
     encode['g'] = 0x2;
     encode['t'] = 0x3;
 
+    // TODO why this not working 
+    bool isSingleEnded = false;
+    if (input_2 != ""){
+        isSingleEnded = true;
+        // cout << "IS SINGLE ENDED\n";
+    }
+    isSingleEnded = true;
+
     ifstream fastq1;
     ifstream fastq2;
     gzFile fastq1_gz = Z_NULL;
@@ -90,12 +97,16 @@ void extract_barcodes_and_minimizers() {
     kseq_t* fastq2_gz_reader = NULL;
     if (!gz_input) {
         fastq1.open (input_1);
-        fastq2.open (input_2);
+        if (!isSingleEnded){
+            fastq2.open (input_2);
+        }
     } else {
         fastq1_gz = gzopen(input_1.c_str(), "r");
-        fastq2_gz = gzopen(input_2.c_str(), "r");
         fastq1_gz_reader = kseq_init(fastq1_gz);
-        fastq2_gz_reader = kseq_init(fastq2_gz);
+        if (!isSingleEnded) {
+            fastq2_gz = gzopen(input_2.c_str(), "r");
+            fastq2_gz_reader = kseq_init(fastq2_gz);
+        }
     }
 
     read_count = 0;
@@ -103,7 +114,9 @@ void extract_barcodes_and_minimizers() {
         cout << "Memory before reading FASTQ:\n\t" << get_memory_use() << "MB\n";
     }
     // Processing FASTQ files one read at a time
-    string name_1, sequence_1, name_2, sequence_2, trash;
+    string name_1, sequence_1;
+    string name_2, sequence_2, trash;
+    
     while (true) {
         if (!gz_input) {
             bool valid_txt_line = true;
@@ -111,49 +124,88 @@ void extract_barcodes_and_minimizers() {
             valid_txt_line = valid_txt_line && getline(fastq1, sequence_1);
             valid_txt_line = valid_txt_line && getline(fastq1, trash);
             valid_txt_line = valid_txt_line && getline(fastq1, trash);
-            valid_txt_line = valid_txt_line && getline(fastq2, name_2);
-            valid_txt_line = valid_txt_line && getline(fastq2, sequence_2);
-            valid_txt_line = valid_txt_line && getline(fastq2, trash);
-            valid_txt_line = valid_txt_line && getline(fastq2, trash);
+            if (!isSingleEnded){
+                valid_txt_line = valid_txt_line && getline(fastq2, name_2);
+                valid_txt_line = valid_txt_line && getline(fastq2, sequence_2);
+                valid_txt_line = valid_txt_line && getline(fastq2, trash);
+                valid_txt_line = valid_txt_line && getline(fastq2, trash);
+            }
             if (!valid_txt_line) {
                 break;
             }
         } else {
             int valid_gz_line = 0;
             valid_gz_line = kseq_read(fastq1_gz_reader);
+            // cout << "Read a line\n";
+            // cout << fastq1_gz_reader->name.s;
             if (valid_gz_line < 0) {
+                cout << "invalid block";
                 break;
             }
-            valid_gz_line = kseq_read(fastq2_gz_reader);
-            if (valid_gz_line < 0) {
-                break;
+            if (!isSingleEnded) {
+                valid_gz_line = kseq_read(fastq2_gz_reader);
+                if (valid_gz_line < 0) {
+                    break;
+                }
             }
+
             name_1     = "@";
             name_1     += fastq1_gz_reader->name.s;
             sequence_1 = fastq1_gz_reader->seq.s;
-            name_2     = "@";
-            name_2     += fastq2_gz_reader->name.s;
-            sequence_2 = fastq2_gz_reader->seq.s;
+            if (!isSingleEnded) {
+                name_2     = "@";
+                name_2     += fastq2_gz_reader->name.s;
+                sequence_2 = fastq2_gz_reader->seq.s;
+            }
+            // cout << "\nend block \n\n";
+            // cout << sequence_1 << "\n\n";
+
         }
 
         int s1_length = sequence_1.size();
-        int s2_length = sequence_2.size();
+        int s2_length = 0;
+        if (isSingleEnded) {
+            s2_length = sequence_2.size();
+        }
 
+        barcode_length_2 = 0;
+
+        // cout << barcode_length_1 << "\t" << barcode_length_2 << "\n\n";
+        // cout << s1_length << "\t" << s2_length << "\n\n";
         NodePtr current_node_ptr = new Node();
         // Extracting the barcode from the start of both mates
         if (s1_length >= barcode_length_1 && s2_length >= barcode_length_2) {
-            current_node_ptr->barcode =
-                sequence_1.substr(0, barcode_length_1) +
-                sequence_2.substr(0, barcode_length_2);
-        } else {
+            if (!isSingleEnded) {
+                current_node_ptr->barcode =
+                    sequence_1.substr(0, barcode_length_1) +
+                    sequence_2.substr(0, barcode_length_2);
+                // cout << "uno\n";
+            }
+            else {
+                current_node_ptr->barcode = sequence_1.substr(0, barcode_length_1);
+                // cout << "dos\n";
+                // cout << current_node_ptr->barcode << "\n";
+                // cout << sequence_1 << "\n";
+                // exit(0);
+
+            }
+        }
+        else {
             current_node_ptr->barcode = string (barcode_length_1 + barcode_length_2, 'N');
+            cout << "Entered baddy block\n";
         }
 
-        s1_length -= barcode_length_1;
-        s2_length -= barcode_length_2;
+        // cout << current_node_ptr->barcode;
+        // cout << "nodeptr block";
+        // exit(0);
 
+        s1_length -= barcode_length_1;
         s1_length -= ignored_sequence_prefix_length;
-        s2_length -= ignored_sequence_prefix_length;
+        
+        if (!isSingleEnded) {
+            s2_length -= barcode_length_2;
+            s2_length -= ignored_sequence_prefix_length;
+        }
 
         // Splitting the remaining sequence into ~ equally sized segments, and extracting minimizers from each
         int s1_seg_length = s1_length / minimizer_count;

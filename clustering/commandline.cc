@@ -125,7 +125,8 @@ void parse_flags(int argc, char *argv[]){
         print_help();
         exit(-1);
     }
-    if (input_1 == "" || input_2 == "" || output_prefix == "") {
+    // if ((input_1 == "" || input_2 == "" || output_prefix == "") {
+    if ((input_1 == "") || output_prefix == "") {
         cout << "Missing input or output files parameters!\n";
         print_help();
         exit(-1);
